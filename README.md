@@ -113,6 +113,30 @@ OSI 7계층으로 추상화되어 있는 각 레이어가 실제로 어떻게 �
     
        > TCP는 Connection-oriented protocol(ex. 휴대폰 통화)이지만,
        > 데이터 전송의 무결성을 보장하지 않는 UDP는 Connection-less protocol(ex. 우편)입니다 😅
+
+    - ***Q. 3 way handshake의 과정에 대해 설명해주세요.***
+
+        3way handshake는 TCP Connection 수립을 위해서 **SYN 비트 세그먼트**를 활용합니다.
+
+        <p align="center"><img src="https://user-images.githubusercontent.com/62372281/209475405-8dad1a99-fbec-4600-9ab4-30475c897f7f.png"></p>
+
+        1. 두 디바이스 중 데이터를 요청하는 Client(C)가 Server(S)에게 연결을 수립하기 위해 **`SYN 비트 세그먼트`를 전송**합니다.
+            - TCP Header의 Flags에 `SYN` 비트가 표시됩니다.
+            - 이 후 C는 `SYN-SENT` 상태가 됩니다.
+            - Sequence Number는 세션 하이재킹과 같은 보안 공격을 방지하기 위해 랜덤하게 생성된 Initial sequence number(ISN)로부터 지정됩니다.
+
+        2. `SYN 비트 세그먼트`를 받은 S는 온전하게 전달 받았음을 표현하기 위해 **`SYN+ACK 비트 세그먼트`를 회신**합니다.
+            - TCP Header의 Flags에는 `SYN`, `ACK` 비트가 표시됩니다.
+            - 이 후 S는 `SYN-RECEIVED` 상태가 됩니다.
+            - Acknowledgement Number는 1번에서 **C에게 전달받은 값에 1을 더한 값**이 담깁니다.
+            - Sequence Number는 S측 ISN이 담깁니다.
+
+        3. `SYN+ACK 비트 세그먼트`를 받는 C는 온전하게 전달 받았음을 표현하기 위해 **`ACK 비트 세그먼트`를 회신**합니다.
+            - TCP Header의 Flags에 `ACK` 비트가 표시됩니다.
+            - Acknowledgement Number는 2번에서 **S에게 전달받은 값에 1을 더한 값**이 담깁니다.
+            - 이 시점부터 데이터 요청을 송신하고 응답을 받는 데에까지 걸리는 RTT(Rount Trip Time)을 계산할 수 있습니다.
+
+    1번부터 3번까지 과정이 온전하게 완료되면 C와 S는 양방향 데이터 송신이 가능한 **`ESTABLISHED`** 상태가 됩니다.
 - ***Q. TCP는 왜 느릴까요 ? (1)***
     
     TCP는 데이터 전송 전 커넥션 수립 이전에 두 개의 패킷을 전송합니다. 바로 `SYN`과`SYN+ACK` 이죠. TCP 의 지연은 바로 이 구간, **SYN/SYN+ACK 수립 구간에서 지연이 많이 발생**합니다.
