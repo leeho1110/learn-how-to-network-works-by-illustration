@@ -253,3 +253,19 @@ OSI 7계층으로 추상화되어 있는 각 레이어가 실제로 어떻게 �
     > 우리가 기억해야 하는 요소는 특정 시점에 링크에 진입 가능한 바이트 수를 표시하는 `대역폭 X 지연시간= Bandwidth-delay product(BDP)`입니다.
     
     결국 혼잡 상태에서 패킷 손실과 RTT 시간을 고려하며 송신자는 수신자에게 매 전송마다 전달받는 `rwnd`와 자신의 네트워크 상황을 고려하여 계산한 Congestion Window 중 작은 값을 선택해 데이터를 전송합니다. 이 때 `cwnd`는 `rwnd`와 조금 다릅니다. `rwnd`가 수신자가 **수신할 수 있는 크기를 표현**했다면, `cwnd`는 **수신자에게 회신받은 `ACK 비트 세그먼트`없이 자신이 송신할 수 있는 크기를 표현**합니다.
+
+    - ***Q. TCP의 혼잡 제어 알고리즘들에 대해 설명해주세요.***
+
+        - TCP Tahoe
+            
+            TCP Tahoe는 1980년대에 발명된 아주 간단한 기술입니다. `cwnd`를 2단계에 걸쳐 증가시킵니다. `Slow Start, AIMD` 순서로 변화하며, 처음에는 Slow Start 방식으로 패킷이 ACK된 만큼만(지금 크기의 2배만큼) window 크기를 늘립니다. 이 후 **`cwnd` 크기가 Slow Start Threshold(ssthresh)값에 도달하면 AIMD 단계로 변경** 합니다.
+            
+            이 시점부터는 `cwnd`는 추가 확장 시 1만큼 증가(Additive Increase)시키고, `ssthresh`는 `cwnd`의 절반으로 감소(Multiplicative Decrease) 시키게 됩니다.  Slow Start 단계에 비해 확장은 좀더 적게, 감소는 훨씬 급격하게 진행합니다.
+            
+            송신자는 만약 수신자 측에서 **3개의 중복된`ACK 비트 세그먼트`가 연달아 도착**하거나, 패킷 전송 시 설정한 **타이머가 만료되면 (RTO algorithm, Retransmission Timeout)** 패킷 손실로 인지하고 **Fast Retrasmit 를 수행** 합니다. 이 때 `cwnd`는 initial window size(초기 크기, Linux의 default값은 10)로 재설정되고, `ssthresh` 값을 현재 cwnd의 절반값으로 재설정한 뒤 다시 Slow Start 단계로 돌아갑니다.
+            
+            > TCP Tahoe = Slow Start + AIMD(Additive Increase/Multiplicative Decrease) + Fast Retrasmit
+            
+            하지만 TCP Tahoe는 네트워크 변화가 많은 현재 특성 상 사용되지 않습니다. 기술이 발전하며 일반적으로 대역폭이 넓어졌고, 그만큼 초기 단계에 window 사이즈(전송 가능한 패킷 수)가 느리게 증가되다보니 그만큼 효율성이 떨어지는 문제가 있습니다.
+            
+            또한 패킷 손실이 발생하면 네트워크 혼잡으로 인지해 window 사이즈를 줄입니다. 이는 패킷 손실을 네트워크의 혼잡을 판단하는 주요 척도로 사용한다는 것이죠. 하지만 이는 네트워크 혼잡의 판단 척도 중 하나이지 반드시 혼잡임을 보장하진 않습니다. 결국 TCP Tahoe는 **적절한 `cwnd` 사이즈를 계산하지 못해 발생하는 낮은 전송 효율**때문에 더이상 사용되지 않습니다.
